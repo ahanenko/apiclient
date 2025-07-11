@@ -42,7 +42,8 @@ public abstract class AbstractApiClient {
 
         // Собираем все поля, помеченные аннотацией @Endpoint
         for (Field field : this.getClass().getDeclaredFields()) {
-            if (field.isAnnotationPresent(org.springframework.beans.factory.annotation.Value.class)) {
+            if (field.isAnnotationPresent(org.springframework.beans.factory.annotation.Value.class) &&
+                    field.getName().startsWith("endpoint")) {
                 field.setAccessible(true);
                 try {
                     String endpoint = (String) field.get(this);

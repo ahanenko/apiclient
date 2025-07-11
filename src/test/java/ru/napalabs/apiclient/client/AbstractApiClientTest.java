@@ -97,7 +97,7 @@ class AbstractApiClientTest {
         // Создаем анонимный класс с тестовыми полями
         AbstractApiClient client = new AbstractApiClient(null, null, BASE_URL) {
             @Value("${valid.endpoint1}")
-            private Integer validEndpoint1 = 1;
+            private Integer endpointValidEndpoint1 = 1;
         };
 
         var error = assertThrows(IllegalStateException.class, client::autoValidateEndpoints);
