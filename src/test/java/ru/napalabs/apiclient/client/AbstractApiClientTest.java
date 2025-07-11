@@ -186,4 +186,39 @@ class AbstractApiClientTest {
                 () -> abstractApiClient.executeGetRequest(endpoint, responseType, AbstractApiClient.WITHOUT_QUERY_PARAMS));
         assertTrue(error.getMessage().contains("Error while getting request"));
     }
+
+    @Test
+    void do_success_executeMultipartPostRequest() {
+        String endpoint = "/some_post_endpoint";
+        var responseType = new ParameterizedTypeReference<String>() {};
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        ReflectionTestUtils.setField(abstractApiClient, "restTemplate", restTemplate);
+        MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+        parts.add("part1", "value1");
+        parts.add("part2", "value2");
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.POST), any(), eq(responseType)))
+                .thenReturn(ResponseEntity.ok("success post rest response"));
+
+        var result = abstractApiClient.executeMultipartPostRequest(endpoint, parts, new ParameterizedTypeReference<String>() {});
+
+        assertEquals("success post rest response", result);
+    }
+
+    @Test
+    void do_failed_executeMultipartPostRequest() {
+        String endpoint = "/some_post_endpoint";
+        var responseType = new ParameterizedTypeReference<String>() {};
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        ReflectionTestUtils.setField(abstractApiClient, "restTemplate", restTemplate);
+        MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.POST), any(), eq(responseType)))
+                .thenReturn(ResponseEntity.internalServerError().body("Error while getting request"));
+
+        var error = assertThrows(ApiClientException.class,
+                () -> abstractApiClient.executeMultipartPostRequest(endpoint, parts, new ParameterizedTypeReference<String>() {}));
+
+        assertTrue(error.getMessage().contains("Error while getting request"));
+    }
 }
