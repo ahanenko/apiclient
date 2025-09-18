@@ -30,7 +30,7 @@ public class AuthContextTest {
     void testClearToken() {
         String token = "test-token-123";
         authContext.setToken(token);
-        authContext.clear();
+        authContext.clearToken();
         assertNull(authContext.getToken(), "Token should be null after clear");
     }
 
@@ -50,5 +50,32 @@ public class AuthContextTest {
         assertEquals(token1, retrievedToken1, "First scope should retain its token");
         assertEquals(token2, newAuthContext.getToken(), "Second scope should have different token");
         assertNotEquals(retrievedToken1, newAuthContext.getToken(), "Tokens from different scopes should not match");
+    }
+
+
+    @Test
+    void testSetAndGetUsername() {
+        String username = "test-username";
+        authContext.setUsername(username);
+        assertEquals(username, authContext.getUsername(), "Username should match the set value");
+    }
+
+    @Test
+    void testClearUsername() {
+        String username = "test-username";
+        authContext.setUsername(username);
+        authContext.clearUsername();
+        assertNull(authContext.getUsername(), "Username should be null after clear");
+    }
+
+    @Test
+    void testClearAll() {
+        String username = "test-username";
+        String token = "test-token-123";
+        authContext.setToken(token);
+        authContext.setUsername(username);
+        authContext.clear();
+        assertNull(authContext.getToken(), "Token should be null after clear");
+        assertNull(authContext.getUsername(), "Username should be null after clear");
     }
 }

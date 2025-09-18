@@ -18,6 +18,11 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Базовая реализация API клиента для выполнения GET и POST запросов
+ * @author Andrey Khanenko
+ * @version 1.0
+ */
 @Slf4j
 public abstract class AbstractApiClient {
     protected final RestTemplate restTemplate;
