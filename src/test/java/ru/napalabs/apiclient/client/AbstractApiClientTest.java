@@ -1,5 +1,7 @@
 package ru.napalabs.apiclient.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,10 +35,13 @@ class AbstractApiClientTest {
     private final String BASE_URL = "http://localhost:8080";
     private AbstractApiClient abstractApiClient;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @BeforeEach
     void setUp() {
         abstractApiClient = new AbstractApiClient(null, null, BASE_URL) {};
     }
+
     @ParameterizedTest
     @NullAndEmptySource
     void do_buildUrl_withoutParams(String queryParamStr) {
@@ -218,6 +223,44 @@ class AbstractApiClientTest {
 
         var error = assertThrows(ApiClientException.class,
                 () -> abstractApiClient.executeMultipartPostRequest(endpoint, parts, new ParameterizedTypeReference<String>() {}));
+
+        assertTrue(error.getMessage().contains("Error while getting request"));
+    }
+
+    @Test
+    void do_success_executeJsonBodyPostRequest() {
+        // Given
+        String endpoint = "/some_post_endpoint";
+        var responseType = new ParameterizedTypeReference<String>() {};
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        ReflectionTestUtils.setField(abstractApiClient, "restTemplate", restTemplate);
+
+        String jsonBody = "{\"part1\":\"value1\",\"part2\":\"value2\"}";
+        JsonNode body = objectMapper.valueToTree(jsonBody);
+
+        // When
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.POST), any(), eq(responseType)))
+                .thenReturn(ResponseEntity.ok("success post rest response"));
+
+        var result = abstractApiClient.executeJsonBodyPostRequest(endpoint, body, new ParameterizedTypeReference<String>() {});
+
+        // Then
+        assertEquals("success post rest response", result);
+    }
+
+    @Test
+    void do_failed_executeJsonBodyPostRequest() {
+        String endpoint = "/some_post_endpoint";
+        var responseType = new ParameterizedTypeReference<String>() {};
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        ReflectionTestUtils.setField(abstractApiClient, "restTemplate", restTemplate);
+        JsonNode body = objectMapper.createObjectNode();
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.POST), any(), eq(responseType)))
+                .thenReturn(ResponseEntity.internalServerError().body("Error while getting request"));
+
+        var error = assertThrows(ApiClientException.class,
+                () -> abstractApiClient.executeJsonBodyPostRequest(endpoint, body, new ParameterizedTypeReference<String>() {}));
 
         assertTrue(error.getMessage().contains("Error while getting request"));
     }
