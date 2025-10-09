@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * Базовая реализация API клиента для выполнения GET и POST запросов
  * @author Andrey Khanenko
- * @version 1.1
+ * @version 1.2
  */
 @Slf4j
 public abstract class AbstractApiClient {
@@ -146,28 +146,57 @@ public abstract class AbstractApiClient {
     }
 
     /**
-     * Создаёт HTTP-сущность без тела, содержащую только заголовки авторизации и формата.
+     * Формирует HTTP-заголовки с указанием принимаемых типов контента.
      *
-     * @return экземпляр {@link HttpEntity} с заголовками
-     */
-    private HttpEntity<?> composeHeadersEntity() {
-        return new HttpEntity<>(composeHeaders());
-    }
-
-    /**
-     * Формирует HTTP-заголовки, включая заголовок авторизации
-     * (если в {@link AuthContext} присутствует токен) и тип принимаемого контента.
-     *
+     * @param acceptedMediaTypes список принимаемых MediaType (может быть пустым)
      * @return объект {@link HttpHeaders}, готовый к использованию при запросе
      */
-    private HttpHeaders composeHeaders() {
+    protected final HttpHeaders composeHeaders(List<MediaType> acceptedMediaTypes) {
         var headers = new HttpHeaders();
+
+        // Если есть токен в текущем контексте, то добавляем авторизацию
         if (authContext != null && authContext.getToken() != null && !authContext.getToken().isBlank()) {
             headers.setBearerAuth(authContext.getToken());
         }
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        // Если acceptedMediaTypes пустой - Accept заголовок не устанавливается
+        if (acceptedMediaTypes != null && !acceptedMediaTypes.isEmpty()) {
+            headers.setAccept(acceptedMediaTypes);
+        }
 
         return headers;
+    }
+
+    /**
+     * Вспомогательные методы для часто используемых конфигураций
+     */
+    protected final HttpHeaders composeJsonHeaders() {
+        return composeHeaders(List.of(MediaType.APPLICATION_JSON));
+    }
+
+    protected final HttpHeaders composeFileHeaders() {
+        return composeHeaders(List.of(MediaType.ALL)); // или пустой список
+    }
+
+    protected final HttpHeaders composeAnyHeaders() {
+        return composeHeaders(List.of(MediaType.ALL));
+    }
+
+    // Соответствующие методы для HttpEntity
+    private HttpEntity<?> composeHeadersEntity(List<MediaType> acceptedMediaTypes) {
+        return new HttpEntity<>(composeHeaders(acceptedMediaTypes));
+    }
+
+    protected final HttpEntity<?> composeJsonHeadersEntity() {
+        return composeHeadersEntity(List.of(MediaType.APPLICATION_JSON));
+    }
+
+    protected final HttpEntity<?> composeFileHeadersEntity() {
+        return composeHeadersEntity(List.of(MediaType.ALL));
+    }
+
+    protected final HttpEntity<?> composeAnyHeadersEntity() {
+        return composeHeadersEntity(List.of(MediaType.ALL));
     }
 
     /**
@@ -185,7 +214,7 @@ public abstract class AbstractApiClient {
                                             MultiValueMap<String, String> queryParams) {
         var url = buildUrl(endpoint, queryParams);
 
-        return executeGetRequest(url, responseType);
+        return executeGetRequest(url, responseType, MediaType.APPLICATION_JSON);
     }
 
     /**
@@ -212,15 +241,71 @@ public abstract class AbstractApiClient {
      * @throws ApiClientException если ответ сервера не имеет статус 2xx
      */
     protected final <T> T executeGetRequest(UriComponents uriComponents,
-                                            ParameterizedTypeReference<T> responseType)  {
+                                            ParameterizedTypeReference<T> responseType,
+                                            MediaType contentType) {
         var url = uriComponents.toUriString();
-
         log.debug("Executing request to URL: {}", url);
-        var response = restTemplate.exchange(url, HttpMethod.GET, composeHeadersEntity(), responseType);
+
+        var response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                composeHeadersEntity(List.of(contentType)),
+                responseType
+        );
+
         if (response.getStatusCode().is2xxSuccessful()) {
             return response.getBody();
         }
         throw new ApiClientException(response);
+    }
+
+    /**
+     * Выполняет GET-запрос для получения файла (бинарных данных).
+     *
+     * @param uriComponents объект, содержащий полный URL и параметры запроса
+     * @return ResponseEntity с массивом байт и заголовками
+     * @throws ApiClientException если ответ сервера не имеет статус 2xx
+     */
+    protected final ResponseEntity<byte[]> executeGetRequestForFile(UriComponents uriComponents) {
+        var url = uriComponents.toUriString();
+        log.debug("Executing file request to URL: {}", url);
+
+        var response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                composeFileHeadersEntity(),
+                byte[].class
+        );
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            return response;
+        }
+        throw new ApiClientException(response);
+    }
+
+    /**
+     * Выполняет GET-запрос для получения файла по эндпоинту.
+     *
+     * @param endpoint относительный путь эндпоинта
+     * @param queryParams параметры запроса (может быть {@code null})
+     * @return ResponseEntity с массивом байт и заголовками
+     * @throws ApiClientException если ответ сервера не имеет статус 2xx
+     */
+    protected final ResponseEntity<byte[]> executeGetRequestForFile(String endpoint,
+                                                                    MultiValueMap<String, String> queryParams) {
+        var url = buildUrl(endpoint, queryParams);
+        return executeGetRequestForFile(url);
+    }
+
+    /**
+     * Выполняет GET-запрос для получения файла по эндпоинту без query-параметров.
+     *
+     * @param endpoint относительный путь эндпоинта
+     * @return ResponseEntity с массивом байт и заголовками
+     * @throws ApiClientException если ответ сервера не имеет статус 2xx
+     */
+    protected final ResponseEntity<byte[]> executeGetRequestForFile(String endpoint) {
+        return executeGetRequestForFile(endpoint, WITHOUT_QUERY_PARAMS);
     }
 
     /**
@@ -266,7 +351,7 @@ public abstract class AbstractApiClient {
             MultiValueMap<String, String> queryParams
     ) {
         UriComponents url = buildUrl(endpoint, queryParams);
-        HttpHeaders headers = composeHeaders();
+        HttpHeaders headers = composeJsonHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(parts, headers);
@@ -308,7 +393,7 @@ public abstract class AbstractApiClient {
             ParameterizedTypeReference<T> responseType
     ) {
         UriComponents url = buildUrl(endpoint, WITHOUT_QUERY_PARAMS);
-        HttpHeaders headers = composeHeaders();
+        HttpHeaders headers = composeJsonHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<JsonNode> requestEntity = new HttpEntity<>(body, headers);
 

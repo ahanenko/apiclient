@@ -1,3 +1,5 @@
 /home/hanenko/IdeaProjects/ApiClient/src/main/java/ru/napalabs/apiclient/client/AbstractApiClient.java
 /home/hanenko/IdeaProjects/ApiClient/src/main/java/ru/napalabs/apiclient/client/AuthContext.java
+/home/hanenko/IdeaProjects/ApiClient/src/main/java/ru/napalabs/apiclient/client/AutoSetCredentials.java
+/home/hanenko/IdeaProjects/ApiClient/src/main/java/ru/napalabs/apiclient/client/CredentialsAspect.java
 /home/hanenko/IdeaProjects/ApiClient/src/main/java/ru/napalabs/apiclient/exception/ApiClientException.java
