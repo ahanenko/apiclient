@@ -399,4 +399,92 @@ public abstract class AbstractApiClient {
 
         return executePostRequest(url.toUriString(), requestEntity, responseType);
     }
+
+    /**
+     * Выполняет PUT-запрос по указанному URL с произвольным телом.
+     *
+     * @param url полный URL эндпоинта
+     * @param requestEntity HTTP-сущность с телом и заголовками
+     * @param responseType тип ожидаемого тела ответа
+     * @param <H> тип тела запроса
+     * @param <T> тип тела ответа
+     * @return тело ответа, десериализованное в указанный тип
+     * @throws ApiClientException если ответ сервера не имеет статус 2xx
+     */
+    protected final <H, T> T executePutRequest(String url,
+                                               HttpEntity<H> requestEntity,
+                                               ParameterizedTypeReference<T> responseType) {
+        ResponseEntity<T> response = restTemplate.exchange(
+                url,
+                HttpMethod.PUT,
+                requestEntity,
+                responseType
+        );
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            return response.getBody();
+        }
+        throw new ApiClientException(response);
+    }
+
+    /**
+     * Выполняет PUT-запрос с типом содержимого {@code multipart/form-data}.
+     *
+     * @param endpoint относительный путь эндпоинта
+     * @param parts части multipart-запроса
+     * @param responseType тип ожидаемого тела ответа
+     * @param queryParams параметры запроса (может быть {@code null})
+     * @param <T> тип возвращаемого объекта
+     * @return тело ответа, десериализованное в указанный тип
+     * @throws ApiClientException если ответ сервера не имеет статус 2xx
+     */
+    protected final <T> T executeMultipartPutRequest(
+            String endpoint,
+            MultiValueMap<String, Object> parts,
+            ParameterizedTypeReference<T> responseType,
+            MultiValueMap<String, String> queryParams
+    ) {
+        UriComponents url = buildUrl(endpoint, queryParams);
+        HttpHeaders headers = composeJsonHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(parts, headers);
+
+        return executePutRequest(url.toUriString(), requestEntity, responseType);
+    }
+
+    /**
+     * Выполняет multipart PUT-запрос без query-параметров.
+     */
+    protected final <T> T executeMultipartPutRequest(
+            String endpoint,
+            MultiValueMap<String, Object> parts,
+            ParameterizedTypeReference<T> responseType
+    ) {
+        return executeMultipartPutRequest(endpoint, parts, responseType, WITHOUT_QUERY_PARAMS);
+    }
+
+    /**
+     * Выполняет PUT-запрос с JSON-телом.
+     *
+     * @param endpoint относительный путь эндпоинта
+     * @param body тело запроса в формате JSON
+     * @param responseType тип ожидаемого тела ответа
+     * @param <T> тип возвращаемого объекта
+     * @return тело ответа, десериализованное в указанный тип
+     * @throws ApiClientException если ответ сервера не имеет статус 2xx
+     */
+    protected final <T> T executeJsonBodyPutRequest(
+            String endpoint,
+            JsonNode body,
+            ParameterizedTypeReference<T> responseType
+    ) {
+        UriComponents url = buildUrl(endpoint, WITHOUT_QUERY_PARAMS);
+        HttpHeaders headers = composeJsonHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<JsonNode> requestEntity = new HttpEntity<>(body, headers);
+
+        return executePutRequest(url.toUriString(), requestEntity, responseType);
+    }
+
 }

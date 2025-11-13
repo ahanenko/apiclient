@@ -264,4 +264,81 @@ class AbstractApiClientTest {
 
         assertTrue(error.getMessage().contains("Error while getting request"));
     }
+
+    // Вставить в класс AbstractApiClientTest рядом с тестами POST
+
+    @Test
+    void do_success_executeMultipartPutRequest() {
+        String endpoint = "/some_put_endpoint";
+        var responseType = new ParameterizedTypeReference<String>() {};
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        ReflectionTestUtils.setField(abstractApiClient, "restTemplate", restTemplate);
+
+        MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+        parts.add("part1", "value1");
+        parts.add("part2", "value2");
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(), eq(responseType)))
+                .thenReturn(ResponseEntity.ok("success put rest response"));
+
+        var result = abstractApiClient.executeMultipartPutRequest(endpoint, parts, new ParameterizedTypeReference<String>() {});
+
+        assertEquals("success put rest response", result);
+    }
+
+    @Test
+    void do_failed_executeMultipartPutRequest() {
+        String endpoint = "/some_put_endpoint";
+        var responseType = new ParameterizedTypeReference<String>() {};
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        ReflectionTestUtils.setField(abstractApiClient, "restTemplate", restTemplate);
+
+        MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(), eq(responseType)))
+                .thenReturn(ResponseEntity.internalServerError().body("Error while putting request"));
+
+        var error = assertThrows(ApiClientException.class,
+                () -> abstractApiClient.executeMultipartPutRequest(endpoint, parts, new ParameterizedTypeReference<String>() {}));
+
+        assertTrue(error.getMessage().contains("Error while putting request"));
+    }
+
+    @Test
+    void do_success_executeJsonBodyPutRequest() {
+        String endpoint = "/some_put_endpoint";
+        var responseType = new ParameterizedTypeReference<String>() {};
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        ReflectionTestUtils.setField(abstractApiClient, "restTemplate", restTemplate);
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode body = mapper.createObjectNode().put("part1", "value1").put("part2", "value2");
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(), eq(responseType)))
+                .thenReturn(ResponseEntity.ok("success put rest response"));
+
+        var result = abstractApiClient.executeJsonBodyPutRequest(endpoint, body, new ParameterizedTypeReference<String>() {});
+
+        assertEquals("success put rest response", result);
+    }
+
+    @Test
+    void do_failed_executeJsonBodyPutRequest() {
+        String endpoint = "/some_put_endpoint";
+        var responseType = new ParameterizedTypeReference<String>() {};
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        ReflectionTestUtils.setField(abstractApiClient, "restTemplate", restTemplate);
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode body = mapper.createObjectNode();
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(), eq(responseType)))
+                .thenReturn(ResponseEntity.internalServerError().body("Error while putting request"));
+
+        var error = assertThrows(ApiClientException.class,
+                () -> abstractApiClient.executeJsonBodyPutRequest(endpoint, body, new ParameterizedTypeReference<String>() {}));
+
+        assertTrue(error.getMessage().contains("Error while putting request"));
+    }
+
 }

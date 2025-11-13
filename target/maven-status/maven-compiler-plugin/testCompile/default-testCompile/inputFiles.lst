@@ -1,0 +1,5 @@
+/home/hanenko/IdeaProjects/ApiClient/src/test/java/ru/napalabs/apiclient/ApiClient.java
+/home/hanenko/IdeaProjects/ApiClient/src/test/java/ru/napalabs/apiclient/ApiClientApplicationTests.java
+/home/hanenko/IdeaProjects/ApiClient/src/test/java/ru/napalabs/apiclient/client/AbstractApiClientTest.java
+/home/hanenko/IdeaProjects/ApiClient/src/test/java/ru/napalabs/apiclient/client/AuthContextTest.java
+/home/hanenko/IdeaProjects/ApiClient/src/test/java/ru/napalabs/apiclient/client/CredentialsAspectTest.java
