@@ -1,3 +1,5 @@
+ru/napalabs/apiclient/client/AutoSetCredentials.class
 ru/napalabs/apiclient/exception/ApiClientException.class
 ru/napalabs/apiclient/client/AuthContext.class
+ru/napalabs/apiclient/client/CredentialsAspect.class
 ru/napalabs/apiclient/client/AbstractApiClient.class

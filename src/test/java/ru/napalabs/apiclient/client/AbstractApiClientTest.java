@@ -24,6 +24,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -388,7 +389,6 @@ class AbstractApiClientTest {
         assertEquals("deleted", result);
     }
 
-
     @Test
     void success_executeJsonBodyPatchRequest() {
         String endpoint = "/some_patch_endpoint";
@@ -725,7 +725,7 @@ class AbstractApiClientTest {
     void composeJsonHeaders_returnsAcceptJson() {
         var headers = ReflectionTestUtils.invokeMethod(abstractApiClient, "composeJsonHeaders");
         assertNotNull(headers);
-        assertTrue(headers instanceof HttpHeaders);
+        assertInstanceOf(HttpHeaders.class, headers);
         assertEquals(List.of(MediaType.APPLICATION_JSON), ((HttpHeaders) headers).getAccept());
     }
 
@@ -747,9 +747,8 @@ class AbstractApiClientTest {
     void composeJsonHeadersEntity_containsHttpEntityWithJsonAccept() {
         var entity = ReflectionTestUtils.invokeMethod(abstractApiClient, "composeJsonHeadersEntity");
         assertNotNull(entity);
-        assertTrue(entity instanceof HttpEntity);
+        assertInstanceOf(HttpEntity.class, entity);
         HttpHeaders headers = ((HttpEntity<?>) entity).getHeaders();
         assertEquals(List.of(MediaType.APPLICATION_JSON), headers.getAccept());
     }
-
 }

@@ -185,7 +185,7 @@ public abstract class AbstractApiClient {
 
         if (authContext != null && authContext.getToken() != null && !authContext.getToken().isBlank()) {
             headers.setBearerAuth(authContext.getToken());
-            log.debug("Токен пользователя (обрезан): %s".formatted(authContext.getToken().substring(0,10)));
+            log.debug("Токен пользователя (обрезан): %s".formatted(authContext.getToken().substring(0, Math.min(authContext.getToken().length(), 10))));
         }
         if (authContext != null && authContext.getUsername() != null && !authContext.getUsername().isBlank()) {
             headers.add(X_AUTH_USER, authContext.getUsername());
