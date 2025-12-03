@@ -374,6 +374,22 @@ class AbstractApiClientTest {
     }
 
     @Test
+    void success_executeDeleteRequestByPathVariable() {
+        String endpoint = "/files";
+        String pathVar = "abc123";
+        var responseType = new ParameterizedTypeReference<String>() {};
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        ReflectionTestUtils.setField(abstractApiClient, "restTemplate", restTemplate);
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(responseType)))
+                .thenReturn(ResponseEntity.ok("deleted"));
+
+        var result = abstractApiClient.executeDeleteRequestByPathVariable(endpoint, pathVar, responseType);
+        assertEquals("deleted", result);
+    }
+
+
+    @Test
     void success_executeJsonBodyPatchRequest() {
         String endpoint = "/some_patch_endpoint";
         var responseType = new ParameterizedTypeReference<String>() {};

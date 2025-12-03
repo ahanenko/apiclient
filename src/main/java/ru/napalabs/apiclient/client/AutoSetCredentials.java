@@ -1,19 +1,23 @@
 package ru.napalabs.apiclient.client;
 
+import org.springframework.http.HttpHeaders;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import static ru.napalabs.apiclient.client.AuthContext.X_AUTH_USER;
+
 /**
  * Аннотация для автоматического извлечения и установки данных аутентификации
- * (токена и имени пользователя) в {@link ru.napalabs.apiclient.client.AuthContext}.
+ * (токена и логина пользователя) в {@link AuthContext}.
  * <p>
  * Применяется к методам контроллеров или сервисов, где требуется автоматически
  * подставлять данные из HTTP-заголовков текущего запроса.
  * </p>
  *
- * <p>Обрабатывается аспектом {@link ru.napalabs.apiclient.client.CredentialsAspect}.</p>
+ * <p>Обрабатывается аспектом {@link CredentialsAspect}.</p>
  *
  * <pre>{@code
  * @RestController
@@ -28,8 +32,8 @@ import java.lang.annotation.Target;
  * }
  * }</pre>
  *
- * @see ru.napalabs.apiclient.client.CredentialsAspect
- * @see ru.napalabs.apiclient.client.AuthContext
+ * @see CredentialsAspect
+ * @see AuthContext
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -46,13 +50,13 @@ public @interface AutoSetCredentials {
     boolean token() default true;
 
     /**
-     * Указывает, нужно ли автоматически устанавливать имя пользователя.
+     * Указывает, нужно ли автоматически устанавливать логин пользователя.
      * <p>
      * Если значение {@code true}, имя будет извлечено из заголовка,
      * указанного в {@link #usernameParam()}.
      * </p>
      *
-     * @return {@code true}, если имя пользователя должно быть установлено
+     * @return {@code true}, если логи пользователя должен быть установлен.
      */
     boolean username() default false;
 
@@ -64,15 +68,15 @@ public @interface AutoSetCredentials {
      *
      * @return имя заголовка для токена
      */
-    String tokenHeader() default "Authorization";
+    String tokenHeader() default HttpHeaders.AUTHORIZATION;
 
     /**
-     * Имя HTTP-заголовка, из которого извлекается имя пользователя.
+     * Имя HTTP-заголовка, из которого извлекается логин пользователя.
      * <p>
-     * По умолчанию используется {@code X-Auth-Username}.
+     * По умолчанию используется {@code X-Auth-User}.
      * </p>
      *
      * @return имя заголовка для имени пользователя
      */
-    String usernameParam() default "X-Auth-Username";
+    String usernameParam() default X_AUTH_USER;
 }

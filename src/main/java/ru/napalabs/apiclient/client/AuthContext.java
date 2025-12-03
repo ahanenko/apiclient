@@ -16,7 +16,7 @@ import org.springframework.web.context.annotation.RequestScope;
  * Это означает, что для каждого входящего запроса создаётся отдельный экземпляр {@code AuthContext}.
  * </p>
  * <p>
- * Содержит токен авторизации и имя пользователя, полученные, например, из заголовков HTTP-запроса.
+ * Содержит токен авторизации и логин пользователя, полученные из заголовков HTTP-запроса.
  * </p>
  *
  * <p><b>Пример использования:</b></p>
@@ -36,7 +36,7 @@ import org.springframework.web.context.annotation.RequestScope;
  */
 @Schema(
         name = "AuthContext",
-        description = "Контекст аутентификации, содержащий токен и имя текущего пользователя."
+        description = "Контекст аутентификации, содержащий токен и логин текущего пользователя."
 )
 @Service
 @RequestScope
@@ -44,6 +44,7 @@ import org.springframework.web.context.annotation.RequestScope;
 @Setter
 @Getter
 public class AuthContext {
+    public final static String X_AUTH_USER = "X-Auth-User";
     /**
      * Токен авторизации текущего пользователя.
      * <p>

@@ -4,7 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -15,6 +19,8 @@ import ru.napalabs.apiclient.exception.ApiClientException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+
+import static ru.napalabs.apiclient.client.AuthContext.X_AUTH_USER;
 
 /**
  * Базовый универсальный клиент для взаимодействия с REST API других сервисов.
@@ -179,6 +185,11 @@ public abstract class AbstractApiClient {
 
         if (authContext != null && authContext.getToken() != null && !authContext.getToken().isBlank()) {
             headers.setBearerAuth(authContext.getToken());
+            log.debug("Токен пользователя (обрезан): %s".formatted(authContext.getToken().substring(0,10)));
+        }
+        if (authContext != null && authContext.getUsername() != null && !authContext.getUsername().isBlank()) {
+            headers.add(X_AUTH_USER, authContext.getUsername());
+            log.debug("Имя пользователя: %s".formatted(authContext.getUsername()));
         }
         if (acceptedMediaTypes != null && !acceptedMediaTypes.isEmpty()) {
             headers.setAccept(acceptedMediaTypes);
@@ -389,6 +400,36 @@ public abstract class AbstractApiClient {
             ParameterizedTypeReference<T> responseType
     ) {
         return executeDeleteRequest(endpoint, responseType, WITHOUT_QUERY_PARAMS);
+    }
+
+    /**
+     * Выполняет DELETE-запрос к ресурсу с параметром пути.
+     * <p>
+     * Пример: <pre>{@code
+     * executeDeleteRequestByPathVariable("/files", "objectKey123", new ParameterizedTypeReference<Void>() {});
+     * }</pre>
+     * создаст запрос DELETE http://baseUrl/files/objectKey123
+     *
+     * @param endpoint      относительный путь эндпоинта (например, "/files")
+     * @param pathVariable  значение подставляемого сегмента пути
+     * @param responseType  тип ожидаемого тела ответа
+     * @param <T>           тип возвращаемого результата
+     * @return тело ответа, десериализованное в указанный тип
+     * @throws ApiClientException если код ответа не 2xx
+     */
+    protected final <T> T executeDeleteRequestByPathVariable(
+            String endpoint,
+            String pathVariable,
+            ParameterizedTypeReference<T> responseType
+    ) {
+        var url = UriComponentsBuilder
+                .fromHttpUrl(baseUrl)
+                .path(endpoint)
+                .pathSegment(pathVariable)
+                .build()
+                .toUriString();
+
+        return exchange(url, HttpMethod.DELETE, composeAnyHeadersEntity(), responseType);
     }
 
     // ----------------------------- PATCH -------------------------------
