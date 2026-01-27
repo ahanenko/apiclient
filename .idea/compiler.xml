@@ -7,17 +7,13 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="bmcReportWorksActiveObjectService" />
+        <module name="ApiClient" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="ApiClient" target="17" />
-    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="ApiClient" options="-parameters" />
-      <module name="bmcReportWorksActiveObjectService" options="-parameters" />
     </option>
   </component>
 </project>
